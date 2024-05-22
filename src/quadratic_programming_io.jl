@@ -63,43 +63,14 @@ mutable struct TwoSidedQpProblem
     right_hand_side = copy(qp.constraint_lower_bound)
     right_hand_side[is_leq_row] .= .-qp.constraint_upper_bound[is_leq_row]
     permute!(right_hand_side, new_row_to_old)
-    #=
-    n = size(qp.constraint_matrix,2)
-    #println(length(findall(qp.variable_lower_bound.>-Inf)))
-    
-    if length(findall(qp.variable_lower_bound.>-Inf)) >=1
-      tmp = 1.0*I(n)
-      qp.constraint_matrix = vcat(qp.constraint_matrix,tmp[findall(qp.variable_lower_bound.>-Inf),:])
-      right_hand_side = [right_hand_side;qp.variable_lower_bound[findall(qp.variable_lower_bound.>-Inf)]]
-      qp.variable_lower_bound .= -Inf
-    end
-    if length(findall(qp.variable_upper_bound.<Inf))>=1
-      tmp = (-1.0)*I(n)
-      qp.constraint_matrix = vcat(qp.constraint_matrix,tmp[findall(qp.variable_upper_bound.<Inf),:])
-      right_hand_side = [right_hand_side;-1.0.*qp.variable_upper_bound[findall(qp.variable_upper_bound.<Inf)]]
-      qp.variable_upper_bound .= Inf
-    end
-    =#
-    #=
-    tmp = 1.0*I(n)
-    qp.constraint_matrix = vcat(qp.constraint_matrix,tmp[findall(qp.variable_lower_bound.>-Inf),:])
-    right_hand_side = [right_hand_side;qp.variable_lower_bound[findall(qp.variable_lower_bound.>-Inf)]]
-    qp.variable_lower_bound .= -Inf
-    tmp = (-1.0)*I(n)
-    qp.constraint_matrix = vcat(qp.constraint_matrix,tmp[findall(qp.variable_upper_bound.<Inf),:])
-    right_hand_side = [right_hand_side;-1.0.*qp.variable_upper_bound[findall(qp.variable_upper_bound.<Inf)]]
-    qp.variable_upper_bound .= Inf
-    =#
+
     qp.constraint_matrix = sparse(qp.constraint_matrix)
 
     num_constraints, num_variables = size(qp.constraint_matrix)
     isfinite_variable_lower_bound = Vector{Bool}(isfinite.(qp.variable_lower_bound))
     isfinite_variable_upper_bound = Vector{Bool}(isfinite.(qp.variable_upper_bound))
 
-    #这是我们新加的,这里在一些特别的例子里有问题，是不是因为上下界为0？这个之后再来修改，先来判断是否有lowerbound，再做这个操作
     
-
-
     return QuadraticProgrammingProblem(
       num_variables,
       num_constraints,
@@ -211,7 +182,7 @@ mutable struct TwoSidedQpProblem
     end
     objective_matrix =
       sparse(obj_row_index, obj_col_index, obj_value, mps.nvar, mps.nvar)
-    #@assert mps.objsense == :notset
+    @assert mps.objsense == :notset
   
     return transform_to_standard_form(
       TwoSidedQpProblem(
