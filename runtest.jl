@@ -39,7 +39,7 @@ file_names = readdir(folder_path)
 first_file = file_names[1]
 @testset "Solver Test" begin
     println("Testing CPU...")
-    cpu_success = run_solver(first_file, 0, time_limit, relat)  # Run on CPU
+    cpu_success = run_solver(first_file, 0, time_limit, relat)
     @test cpu_success == true
     
     if !cpu_success
@@ -49,7 +49,7 @@ first_file = file_names[1]
     end
 
     println("Testing GPU...")
-    gpu_success = run_solver(first_file, 1, time_limit, relat)  # Run on GPU
+    gpu_success = run_solver(first_file, 1, time_limit, relat)
     @test gpu_success == true
     
     if !gpu_success
