@@ -309,17 +309,16 @@ function compute_next_dual_solution_kernel!(
     next_primal_product::Vector{Float64},
     step_size::Float64,
     primal_weight::Float64,
-    extrapolation_coefficient::Float64, 
     num_equalities::Int64,
     num_constraints::Int64,
     next_dual::Vector{Float64},
 )
     for tx in 1:num_equalities
-        next_dual[tx] = current_dual_solution[tx] + (primal_weight * step_size) * (right_hand_side[tx] - next_primal_product[tx] - extrapolation_coefficient * (next_primal_product[tx] - current_primal_product[tx]))
+        next_dual[tx] = current_dual_solution[tx] + (primal_weight * step_size) * (right_hand_side[tx] - next_primal_product[tx])
     end
 
     for tx in (num_equalities + 1):num_constraints
-        next_dual[tx] = current_dual_solution[tx] + (primal_weight * step_size) * (right_hand_side[tx] - next_primal_product[tx] - extrapolation_coefficient * (next_primal_product[tx] - current_primal_product[tx]))
+        next_dual[tx] = current_dual_solution[tx] + (primal_weight * step_size) * (right_hand_side[tx] - next_primal_product[tx])
         next_dual[tx] = max(next_dual[tx], 0.0)
     end
     return 
@@ -331,7 +330,6 @@ Compute dual solution in the next iteration
 function compute_next_dual_solution!(
     problem::QuadraticProgrammingProblem,
     current_dual_solution::Vector{Float64},
-    extrapolation_coefficient::Float64, 
     step_size::Float64,
     primal_weight::Float64,
     next_primal_product::Vector{Float64},
@@ -346,7 +344,6 @@ function compute_next_dual_solution!(
         next_primal_product,
         step_size,
         primal_weight,
-        extrapolation_coefficient,
         problem.num_equalities,
         problem.num_constraints,
         next_dual,
@@ -471,11 +468,9 @@ function take_step!(
     end
         solver_state.CG_total_extra += CG_extra
 
-    extrapolation_coefficient = 0.0
     compute_next_dual_solution!(
         problem,
         solver_state.current_dual_solution,
-        extrapolation_coefficient,
         solver_state.step_size,
         solver_state.primal_weight,
         buffer_state.next_primal_product,

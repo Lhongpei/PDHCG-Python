@@ -21,7 +21,7 @@ struct SaddlePointOutput
     termination_string::String
 
     """
-    The total number of algorithmic iterations for the solve.这个之前是Int32有什么影响吗
+    The total number of algorithmic iterations for the solve.
     """
     iteration_count::Int64
 
