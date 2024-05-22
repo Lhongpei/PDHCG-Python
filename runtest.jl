@@ -12,7 +12,7 @@ relat = 1e-3                   # The relative tolerance for the solver
 #--------------------END----------------------
 
 # Function to run the solver
-function run_solver(file_name, use_gpu, GPU_id=0, time_limit=3600, relat=1e-6)
+function run_solver(file_name, use_gpu, time_limit=3600, relat=1e-6, GPU_id=0)
     project_scr = ["--project=scripts", "./test/solve_test.jl"]
     time_limit_arg = ["--time_sec_limit", "$time_limit"]
     relat_arg = ["--tolerance", "$relat"]
@@ -39,7 +39,7 @@ file_names = readdir(folder_path)
 first_file = file_names[1]
 @testset "Solver Test" begin
     println("Testing CPU...")
-    cpu_success = run_solver(first_file, 0)  # Run on CPU
+    cpu_success = run_solver(first_file, 0, time_limit, relat)  # Run on CPU
     @test cpu_success == true
     
     if !cpu_success
@@ -49,7 +49,7 @@ first_file = file_names[1]
     end
 
     println("Testing GPU...")
-    gpu_success = run_solver(first_file, 1)  # Run on GPU
+    gpu_success = run_solver(first_file, 1, time_limit, relat)  # Run on GPU
     @test gpu_success == true
     
     if !gpu_success
