@@ -26,6 +26,14 @@ for (i, file_name) in enumerate(file_names)
 end
 
 function run_solver(file_path, save_path, use_gpu=0, GPU_id=0, time_limit=3600, relat=1e-6)
+    "
+     `file_path`: Path to the quadratic programming instance file.
+     `save_path`: Directory where the output files will be saved.
+     `use_gpu`: Enables GPU acceleration if set to 1; otherwise, it remains on CPU (default: 0).
+     `GPU_id`: Identifies which GPU to use if GPU acceleration is enabled (default: 0).
+     `time_limit`: Sets the maximum allowed time for the solver to run in seconds (default: 3600).
+     `relat`: Specifies the solver's relative tolerance level (default: 1e-6).
+     "
     project_scr = ["--project=scripts", "./test/solve_test.jl"]
     time_limit_arg = ["--time_sec_limit", "$time_limit"]
     relat_arg = ["--tolerance", "$relat"]

@@ -35,7 +35,9 @@ Solver Test   |    2      2   <time>
 
 ## Running
 
-`solve.jl` is the recommended script for using PDHCG. The results are written in JSON and text files. 
+### API for using PDHCG
+
+`solve.jl` is the recommended script for using PDHCG, which uses command-line arguments to pass parameters. The results are written in JSON and text files.
 
 ```sh
 $ julia --project scripts/solve.jl \
@@ -43,7 +45,25 @@ $ julia --project scripts/solve.jl \
 --tolerance=TOLERANCE --time_sec_limit=TIME_SEC_LIMIT --use_gpu=USE_GPU
 ```
 
-**Input data shouldn't have any constraint with inf upper-bound and -inf lower-bound.**
+`run.jl` is a script for using PDHCG to solve QP instances. It uses function calls for parameter passing.
+
+### Solving Datasets
+
+`run.jl` is suitable to solve instances in given datasets by setting `folder_path` item in this file.
+
+  For example, to solve example files, you can set the `folder_path` as follows:
+  
+```sh
+folder_path = "./example/" 
+```
+
+### Data Requirement
+
+Input data shouldn't have any constraint with inf upper-bound and -inf lower-bound.
+
+## Datasets
+
+All datasets we used can be found at [https://anonymous.4open.science/r/QP_datasets/]
 
 ## Interpreting the output
 
@@ -83,8 +103,7 @@ A table of iteration stats will be printed with the following headings.
 
 ### Others
 
-- `run_example.jl` is an example of solving problems by using PDHCG.
-- `json2csv` is a utility to summarize all output files.
+- `json2csv.jl` is a utility to summarize all output files.
 
 ## License
 
