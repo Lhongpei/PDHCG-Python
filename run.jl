@@ -1,4 +1,3 @@
-using PDHCG
 #-------------Running Parameters--------------
 #-----------------GPU setting-----------------
 GPU_on = 0                     # 1: use GPU; 0: use CPU

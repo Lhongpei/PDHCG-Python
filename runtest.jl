@@ -1,6 +1,5 @@
 using Test
 using JSON3
-using PDHCG
 #-------------Running Parameters--------------
 #-----------------GPU setting-----------------
 GPU_id = 0                     # The GPU id if there are multiple GPUs (if there is only one GPU, set it to 0)
