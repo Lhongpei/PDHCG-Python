@@ -20,7 +20,7 @@ mutable struct QP_constant_paramter
     Q_scaled::SparseMatrixCSC{Float64,Int64}
 end
 
-mutable struct PdhgSolverState
+mutable struct PdhcgSolverState
     current_primal_solution::Vector{Float64}
     current_dual_solution::Vector{Float64}
     delta_primal::Vector{Float64}
@@ -54,7 +54,7 @@ function define_norms(
 end
   
 
-function pdhg_specific_log(
+function pdhcg_specific_log(
     iteration::Int64,
     current_primal_solution::Vector{Float64},
     current_dual_solution::Vector{Float64},
@@ -83,7 +83,7 @@ function pdhg_specific_log(
     end
 end
 
-function pdhg_final_log(
+function pdhcg_final_log(
     problem::QuadraticProgrammingProblem,
     avg_primal_solution::Vector{Float64},
     avg_dual_solution::Vector{Float64},
@@ -355,7 +355,7 @@ end
 Update primal and dual solutions
 """
 function update_solution_in_solver_state!(
-    solver_state::PdhgSolverState,
+    solver_state::PdhcgSolverState,
     buffer_state::BufferState,
 )
     solver_state.delta_primal .= buffer_state.next_primal .- solver_state.current_primal_solution
@@ -381,7 +381,7 @@ function update_solution_in_solver_state!(
 end
 
 function compute_interaction_and_movement(
-    solver_state::PdhgSolverState,
+    solver_state::PdhcgSolverState,
     buffer_state::BufferState,
 )
     buffer_state.delta_primal .= buffer_state.next_primal .- solver_state.current_primal_solution
@@ -407,7 +407,7 @@ end
 function take_step!(
     step_params::ConstantStepsizeParams,
     problem::QuadraticProgrammingProblem,
-    solver_state::PdhgSolverState,
+    solver_state::PdhcgSolverState,
     buffer_state::BufferState,
 )
     
@@ -520,8 +520,10 @@ Main algorithm
 """
 function optimize(
     params::PdhcgParameters,
-    original_problem::QuadraticProgrammingProblem,
-)
+    original_problem::QuadraticProgrammingProblem;
+    initial_primal::Union{Nothing, Vector{Float64}} = nothing,
+    initial_dual::Union{Nothing, Vector{Float64}} = nothing,
+    )
     validate(original_problem)
     qp_cache = cached_quadratic_program_info(original_problem)
     original_norm_Q = estimate_maximum_singular_value(original_problem.objective_matrix)
@@ -572,15 +574,32 @@ function optimize(
 
     norm_Q, number_of_power_iterations_Q = estimate_maximum_singular_value(d_problem.objective_matrix)
     norm_A, number_of_power_iterations_A = estimate_maximum_singular_value(d_problem.constraint_matrix)
+    
+    if isnothing(initial_primal)
+        initial_primal_point = zeros(Float64, primal_size)
+        initial_primal_product = zeros(Float64, dual_size)
+        initial_primal_obj_product = zeros(Float64, primal_size)
+    else
+        initial_primal_point = initial_primal
+        initial_primal_product = scaled_problem.scaled_qp.constraint_matrix * initial_primal_point
+        initial_primal_obj_product = scaled_problem.scaled_qp.objective_matrix * initial_primal_point
+    end
 
-    solver_state = PdhgSolverState(
-        zeros(Float64, primal_size),     # current_primal_solution
-        zeros(Float64, dual_size),       # current_dual_solution
-        zeros(Float64, primal_size),     # delta_primal
-        zeros(Float64, dual_size),       # delta_dual
-        zeros(Float64, dual_size),       # current_primal_product
-        zeros(Float64, primal_size),     # current_dual_product
-        zeros(Float64, primal_size),     # current_primal_obj_product
+    if isnothing(initial_dual)
+        initial_dual_point = zeros(Float64, dual_size)
+        initial_dual_product = zeros(Float64, primal_size)
+    else
+        initial_dual_point = initial_dual
+        initial_dual_product = scaled_problem.scaled_qp.constraint_matrix' * initial_dual_point
+    end
+    solver_state = PdhcgSolverState(
+        initial_primal_point,               # current_primal_solution
+        initial_dual_point,                 # current_dual_solution
+        zeros(Float64, primal_size),   # delta_primal
+        zeros(Float64, dual_size),     # delta_dual
+        initial_primal_product,             # current_primal_product
+        initial_dual_product,               # current_dual_product
+        initial_primal_obj_product,         # current_primal_obj_product
         initialize_solution_weighted_average(primal_size, dual_size),
         0.0,                 # step_size
         1.0,                 # primal_weight
@@ -882,7 +901,7 @@ function optimize(
                 avg_primal_solution = buffer_avg.avg_primal_solution
                 avg_dual_solution = buffer_avg.avg_dual_solution
 
-                pdhg_final_log(
+                pdhcg_final_log(
                     scaled_problem.scaled_qp,
                     avg_primal_solution,
                     avg_dual_solution,
@@ -895,8 +914,8 @@ function optimize(
                 #println(solver_state.CG_total_extra)
                 return unscaled_saddle_point_output(
                     scaled_problem,
-                    avg_primal_solution,
-                    avg_dual_solution,
+                    solver_state.current_primal_solution,
+                    solver_state.current_dual_solution,
                     termination_reason,
                     iteration - 1,
                     iteration_stats,
@@ -954,7 +973,7 @@ function optimize(
             params.verbosity,
             termination_evaluation_frequency,
         )
-            pdhg_specific_log(
+            pdhcg_specific_log(
                 iteration,
                 solver_state.current_primal_solution,
                 solver_state.current_dual_solution,

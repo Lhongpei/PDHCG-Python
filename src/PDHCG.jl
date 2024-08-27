@@ -43,12 +43,11 @@ include("termination.jl")
 include("iteration_stats_utils.jl")
 include("saddle_point.jl")
 include("solver.jl")
-
-
+include("data.jl")
+include("optimizer.jl")
 using CUDA
 include("cpu_to_gpu.jl")
 include("iteration_stats_utils_gpu.jl")
 include("saddle_point_gpu.jl")
 include("solver_gpu.jl")
-
 end # module PDHCG

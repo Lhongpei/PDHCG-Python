@@ -323,6 +323,10 @@ mutable struct SolveLog
     iteration_stats::Vector{IterationStats}
 
     kkt_error::Vector{Float64}
+
+    primal_solution::Union{Vector{Float64}, Nothing}
+    dual_solution::Union{Vector{Float64}, Nothing}
+    objective_value::Union{Float64, Nothing}
 end
 
 function SolveLog()
@@ -338,6 +342,9 @@ function SolveLog()
         POINT_TYPE_UNSPECIFIED,
         IterationStats[],
         Vector{Float64}(),
+        nothing,
+        nothing,
+        nothing
     )
 end
 

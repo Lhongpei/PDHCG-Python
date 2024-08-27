@@ -1,4 +1,4 @@
-mutable struct CuPdhgSolverState
+mutable struct CuPdhcgSolverState
     current_primal_solution::CuVector{Float64}
     current_dual_solution::CuVector{Float64}
     delta_primal::CuVector{Float64}
@@ -41,7 +41,7 @@ mutable struct CuBufferState
     CG_bound::Float64
 end
 
-function pdhg_specific_log(
+function pdhcg_specific_log(
     iteration::Int64,
     current_primal_solution::CuVector{Float64},
     current_dual_solution::CuVector{Float64},
@@ -277,7 +277,7 @@ end
 Update primal and dual solutions
 """
 function update_solution_in_solver_state!(
-    solver_state::CuPdhgSolverState,
+    solver_state::CuPdhcgSolverState,
     buffer_state::CuBufferState,
 )
     solver_state.delta_primal .= buffer_state.next_primal .- solver_state.current_primal_solution
@@ -328,7 +328,7 @@ function compute_triple_dots_kernel!(
 end
 
 function compute_interaction_and_movement(
-    solver_state::CuPdhgSolverState,
+    solver_state::CuPdhcgSolverState,
     buffer_state::CuBufferState,
 )
     buffer_state.delta_primal .= buffer_state.next_primal .- solver_state.current_primal_solution
@@ -348,12 +348,12 @@ function compute_interaction_and_movement(
     return interaction, movement
 end
 """
-Take PDHG step with ConstantStepsize
+Take PDHCG step with ConstantStepsize
 """
 function take_step!(
     step_params::ConstantStepsizeParams,
     problem::CuQuadraticProgrammingProblem,
-    solver_state::CuPdhgSolverState,
+    solver_state::CuPdhcgSolverState,
     buffer_state::CuBufferState,
 )
     step_size = solver_state.step_size
@@ -466,8 +466,10 @@ Main algorithm
 """
 function optimize_gpu(
     params::PdhcgParameters,
-    original_problem::QuadraticProgrammingProblem,
-)
+    original_problem::QuadraticProgrammingProblem;
+    initial_primal::Union{Nothing, Vector{Float64}} = nothing,
+    initial_dual::Union{Nothing, Vector{Float64}} = nothing,
+    )
     validate(original_problem)
     qp_cache = cached_quadratic_program_info(original_problem)
     original_norm_Q = estimate_maximum_singular_value(original_problem.objective_matrix)
@@ -520,20 +522,36 @@ function optimize_gpu(
 
     d_scaled_problem = scaledqp_cpu_to_gpu(scaled_problem)
     d_problem = d_scaled_problem.scaled_qp
-    buffer_lp = qp_cpu_to_gpu(original_problem)
+
 
     norm_Q, number_of_power_iterations_Q = estimate_maximum_singular_value(scaled_problem.scaled_qp.objective_matrix)
     norm_A, number_of_power_iterations_A = estimate_maximum_singular_value(scaled_problem.scaled_qp.constraint_matrix)
+    if isnothing(initial_primal)
+        initial_primal_point = CUDA.zeros(Float64, primal_size)
+        initial_primal_product = CUDA.zeros(Float64, dual_size)
+        initial_primal_obj_product = CUDA.zeros(Float64, primal_size)
+    else
+        initial_primal_point = CUDA.CuArray(initial_primal)
+        initial_primal_product = CUDA.CuArray(scaled_problem.scaled_qp.constraint_matrix * initial_primal)
+        initial_primal_obj_product = CUDA.CuArray(scaled_problem.scaled_qp.objective_matrix * initial_primal)
+    end
 
+    if isnothing(initial_dual)
+        initial_dual_point = CUDA.zeros(Float64, dual_size)
+        initial_dual_product = CUDA.zeros(Float64, primal_size)
+    else
+        initial_dual_point = CUDA.CuArray(initial_dual)
+        initial_dual_product = CUDA.CuArray(scaled_problem.scaled_qp.constraint_matrix' * initial_dual)
+    end
     # initialization
-    solver_state = CuPdhgSolverState(
-        CUDA.zeros(Float64, primal_size),    # current_primal_solution
-        CUDA.zeros(Float64, dual_size),      # current_dual_solution
-        CUDA.zeros(Float64, primal_size),    # delta_primal
-        CUDA.zeros(Float64, dual_size),      # delta_dual
-        CUDA.zeros(Float64, dual_size),      # current_primal_product
-        CUDA.zeros(Float64, primal_size),    # current_dual_product
-        CUDA.zeros(Float64, primal_size),    # current_primal_obj_product
+    solver_state = CuPdhcgSolverState(
+        initial_primal_point,               # current_primal_solution
+        initial_dual_point,                 # current_dual_solution
+        CUDA.zeros(Float64, primal_size),   # delta_primal
+        CUDA.zeros(Float64, dual_size),     # delta_dual
+        initial_primal_product,             # current_primal_product
+        initial_dual_product,               # current_dual_product
+        initial_primal_obj_product,         # current_primal_obj_product
         cu_initialize_solution_weighted_average(primal_size, dual_size),
         0.0,                 # step_size
         1.0,                 # primal_weight
@@ -843,7 +861,7 @@ function optimize_gpu(
                     avg_dual_solution,
                 )
 
-                pdhg_final_log(
+                pdhcg_final_log(
                     scaled_problem.scaled_qp,
                     avg_primal_solution,
                     avg_dual_solution,
@@ -856,8 +874,8 @@ function optimize_gpu(
 
                 return unscaled_saddle_point_output(
                     scaled_problem,
-                    avg_primal_solution,
-                    avg_dual_solution,
+                    Vector(solver_state.current_primal_solution),
+                    Vector(solver_state.current_dual_solution),
                     termination_reason,
                     iteration - 1,
                     iteration_stats,
@@ -916,7 +934,7 @@ function optimize_gpu(
             params.verbosity,
             termination_evaluation_frequency,
         )
-            pdhg_specific_log(
+            pdhcg_specific_log(
                 iteration,
                 solver_state.current_primal_solution,
                 solver_state.current_dual_solution,
@@ -930,4 +948,5 @@ function optimize_gpu(
 
         time_spent_doing_basic_algorithm += time() - time_spent_doing_basic_algorithm_checkpoint
     end
+
 end

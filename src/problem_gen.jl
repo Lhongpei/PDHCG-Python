@@ -36,13 +36,13 @@ function generate_randomQP_problem(n::Int, seed::Int=1, sparsity::Float64=1e-8)
     )
 end
 
-function generate_lasso_problem(n::Int, seed::Int=1)
+function generate_lasso_problem(n::Int, seed::Int=1, sparsity::Float64=1e-2)
     # Set random seed
     Random.seed!(seed)
 
     # Initialize parameters
     m = Int(n * 0.5)
-    Ad = sprandn(m, n, 0.01)
+    Ad = sprandn(m, n, sparsity)
     x_true = (rand(n) .> 0.5) .* randn(n) ./ sqrt(n)
     bd = Ad * x_true + randn(m)
     lambda_max = norm(Ad' * bd, Inf)
@@ -84,7 +84,7 @@ function generate_lasso_problem(n::Int, seed::Int=1)
     )
 end
 
-function generate_svm_problem(n::Int, seed::Int=1)
+function generate_svm_problem(n::Int, seed::Int=1, Sparsity::Float64=1e-2)
     # 设置随机种子
     Random.seed!(seed)
 
@@ -96,8 +96,8 @@ function generate_svm_problem(n::Int, seed::Int=1)
     b_svm_val = vcat(ones(N_half), -ones(N_half))
 
     # 生成数据
-    A_upp = sprandn(N_half, n_features, 0.01)
-    A_low = sprandn(N_half, n_features, 0.01)
+    A_upp = sprandn(N_half, n_features, Sparsity)
+    A_low = sprandn(N_half, n_features, Sparsity)
     A_svm_val = vcat(A_upp / sqrt(n_features) .+ (A_upp .!= 0) / n_features,
                      A_low / sqrt(n_features) .- (A_low .!= 0) / n_features)
 
@@ -136,12 +136,12 @@ function generate_svm_problem(n::Int, seed::Int=1)
     )
 end
 
-function generate_portfolio_problem(n::Int, seed::Int=1)
+function generate_portfolio_problem(n::Int, seed::Int=1, sparsity::Float64=0.15)
     Random.seed!(seed)
     
     n_assets = n 
     k = Int(n*1)
-    F = sprandn(n_assets, k, 0.15)
+    F = sprandn(n_assets, k, sparsity)
     D = spdiagm(0 => rand(n_assets) .* sqrt(k))
     mu = randn(n_assets)
     gamma = 1.0
