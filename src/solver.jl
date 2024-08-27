@@ -1,6 +1,6 @@
 struct ConstantStepsizeParams end
 
-struct PdhgParameters
+struct PdhcgParameters
     l_inf_ruiz_iterations::Int
     l2_norm_rescaling::Bool
     pock_chambolle_alpha::Union{Float64,Nothing}
@@ -519,7 +519,7 @@ end
 Main algorithm
 """
 function optimize(
-    params::PdhgParameters,
+    params::PdhcgParameters,
     original_problem::QuadraticProgrammingProblem,
 )
     validate(original_problem)

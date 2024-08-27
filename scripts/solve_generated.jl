@@ -17,35 +17,19 @@ function write_vector_to_file(filename, vector)
 end
 
 function solve_instance_and_output(
+    qp::PDHCG.QuadraticProgrammingProblem,
     parameters::PDHCG.PdhcgParameters,
     output_dir::String,
-    instance_path::String,
     gpu_flag::Bool,
+    saved_name::String,
 )
     if !isdir(output_dir)
         mkpath(output_dir)
     end
   
-    instance_name = replace(basename(instance_path), r"\.(mps|MPS|qps|QPS)(\.gz)?$" => "")
+    instance_name = saved_name
   
     function inner_solve()
-        lower_file_name = lowercase(basename(instance_path))
-        if endswith(lower_file_name, ".mps") ||
-            endswith(lower_file_name, ".mps.gz") ||
-            endswith(lower_file_name, ".qps") ||
-            endswith(lower_file_name, ".qps.gz")
-            qp = PDHCG.qps_reader_to_standard_form(instance_path)
-        else
-            error(
-                "Instance has unrecognized file extension: ", 
-                basename(instance_path),
-            )
-        end
-    
-        if parameters.verbosity >= 1
-            println("Instance: ", instance_name)
-        end
-
         if gpu_flag
             output = PDHCG.optimize_gpu(parameters, qp)
         else
@@ -141,10 +125,10 @@ function parse_command_line()
     arg_parse = ArgParse.ArgParseSettings()
 
     ArgParse.@add_arg_table! arg_parse begin
-        "--instance_path"
-        help = "The path to the instance to solve in .mps.gz or .mps format."
+        "--generator"
+        help = "The generator of the problem with choices: [randomqp, lasso, svm, portfolio, mpc]."
         arg_type = String
-        required = true
+        default = "randomqp"
 
         "--output_directory"
         help = "The directory for output files."
@@ -165,6 +149,17 @@ function parse_command_line()
         help = "Using GPU: 0-false, 1-true"
         arg_type = Int64
         default = 0
+
+        "--randseed"
+        help = "Random seed used to generate problem."
+        arg_type = Int64
+        default = 42
+
+        "--scale"
+        help = "Scale of the problem."
+        arg_type = Int64
+        default = 100000
+
     end
 
     return ArgParse.parse_args(arg_parse)
@@ -173,21 +168,40 @@ end
 
 function main()
     parsed_args = parse_command_line()
-    instance_path = parsed_args["instance_path"]
+    generator = parsed_args["generator"]
     tolerance = parsed_args["tolerance"]
     time_sec_limit = parsed_args["time_sec_limit"]
     output_directory = parsed_args["output_directory"]
     gpu_flag = Bool(parsed_args["use_gpu"])
-
+    randseed = parsed_args["randseed"]
+    scale = parsed_args["scale"]
+    
     if gpu_flag && !CUDA.functional()
         error("CUDA not found when --use_gpu=1")
     end
-
-    qp = PDHCG.qps_reader_to_standard_form(instance_path)
-
+    if generator == "randomqp"
+        qp = PDHCG.generate_randomQP_problem(scale, randseed)
+        saved_name = "randomqp_seed$(randseed)_scale$(scale)"
+    elseif generator == "lasso"
+        qp = PDHCG.generate_lasso_problem(scale, randseed)
+        saved_name = "lasso_seed$(randseed)_scale$(scale)"
+    elseif generator == "svm"
+        qp = PDHCG.generate_svm_problem(scale, randseed)
+        saved_name = "svm_seed$(randseed)_scale$(scale)"
+    elseif generator == "portfolio"
+        qp = PDHCG.generate_portfolio_problem(scale, randseed)
+        saved_name = "portfolio$(randseed)_scale$(scale)"
+    elseif generator == "mpc"
+        qp = PDHCG.generate_mpc_problem(scale, randseed)
+        saved_name = "mpc_seed$(randseed)_scale$(scale)"
+    else
+        error("Unknown generator: ", generator)
+    end
+    println("Generated Successfully")
+    qpw = copy(qp)
     oldstd = stdout
     redirect_stdout(devnull)
-    warm_up(qp, gpu_flag);
+    warm_up(qpw, gpu_flag);
     redirect_stdout(oldstd)
 
     restart_params = PDHCG.construct_restart_parameters(
@@ -224,10 +238,11 @@ function main()
     )
 
     solve_instance_and_output(
+        qp,
         params,
         output_directory,
-        instance_path,
         gpu_flag,
+        saved_name,
     )
 
 end

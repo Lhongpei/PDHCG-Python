@@ -32,6 +32,15 @@ mutable struct QuadraticProgrammingProblem
   right_hand_side::Vector{Float64}
   num_equalities::Int64
 end
+
+function Base.copy(qpp::QuadraticProgrammingProblem)
+  fieldnames = Base.fieldnames(typeof(qpp))
+  
+  copied_fields = [Base.copy(getfield(qpp, name)) for name in fieldnames]
+  
+  return QuadraticProgrammingProblem(copied_fields...)
+end
+
 mutable struct BufferState
   next_primal::Vector{Float64}
   next_dual::Vector{Float64}

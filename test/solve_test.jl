@@ -15,7 +15,7 @@ function write_vector_to_file(filename, vector)
 end
 
 function solve_instance_and_output(
-    parameters::PDHCG.PdhgParameters,
+    parameters::PDHCG.PdhcgParameters,
     instance_path::String,
     gpu_flag::Bool,
 )
@@ -139,7 +139,7 @@ function main()
         kkt_matrix_pass_limit = Inf,
     )
 
-    params = PDHCG.PdhgParameters(
+    params = PDHCG.PdhcgParameters(
         10,
         false,
         1.0,
