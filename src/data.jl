@@ -1,4 +1,4 @@
-function readFile(filename::String, fix_format::Bool)
+function readFile(filename::String; fix_format::Bool = false)
     """
     Reads an MPS or QPS file using the QPSReader package and transforms it into a
     `QuadraticProgrammingProblem` struct.
