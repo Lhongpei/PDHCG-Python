@@ -1,120 +1,153 @@
-# PDHCG.jl
 
-This repository contains the official implementation of the restarted Primal-Dual Hybrid Conjugate Gradient (PDHCG) algorithm for solving large-scale convex quadratic programming problems.
+# PDHCG-Python
 
-Part of the code utilizes [PDQP.jl](https://github.com/jinwen-yang/PDQP.jl) by Jinwen Yang and Haihao Lu.
+The `PDHCG-Python` project provides a Python interface for solving convex Quadratic Programming problems with linear constraints  (QPs)  using the Primal-Dual Hybrid Conjugate Gradient (PDHCG) algorithm, which is an advanced FOM solver designed for QPs. Core functions is implemented by Julia.
 
-## Setup
+## Installation
 
-A one-time step is required to set up the necessary packages on the local machine:
+Install through PyPI
 
-```sh
-julia --project -e 'import Pkg; Pkg.instantiate()'
+```bash
+pip install pdhcg
 ```
 
-## Test
+## Usage
 
-To test if the setup is successful, use the following command:
+### 1. Import and Initialize
 
-All commands below assume that the current directory is the working directory.
-
-```sh
-julia runtest.jl
+```python
+from pdhcg import PDHCG  
+solver = PDHCG(name="My QP Solver")
 ```
 
-If the setup is completed correctly, you should see the following output:
+### 2. Setting Parameters
 
-```.
---- Solver Test Summary ---
-CPU test: SUCCESS
-GPU test: SUCCESS
----------------------------
-Test Summary: | Pass  Total   Time
-Solver Test   |    2      2   <time>
+Set solver parameters either by individual `setParam` or batch `setParams` methods.
+
+```python
+solver.setParam("time_limit", 600)
+solver.setParams(gpu_flag=True, verbose_level=2)
 ```
 
-## Running
 
-### API for using PDHCG
+### 3. Defining the Problem
 
-`solve.jl` is the recommended script for using PDHCG, which uses command-line arguments to pass parameters. The results are written in JSON and text files.
+You can define a problem in three ways:
 
-```sh
-$ julia --project scripts/solve.jl \
---instance_path=INSTANCE_PATH --output_directory=OUTPUT_DIRECTORY \ 
---tolerance=TOLERANCE --time_sec_limit=TIME_SEC_LIMIT --use_gpu=USE_GPU
-```
+- **Read from File**:
 
-`run.jl` is a script for using PDHCG to solve QP instances. It uses function calls for parameter passing.
+  ```python
+  solver.read("path/to/problem.qps", fixformat=False)
+  ```
 
-### Solving Datasets
+- **Generate Random Problem**:
 
-`run.jl` is suitable to solve instances in given datasets by setting `folder_path` item in this file.
+  ```python
+  solver.setGeneratedProblem(problem_type="QP", n=100, density=0.05, seed=42)
+  ```
 
-  For example, to solve example files, you can set the `folder_path` as follows:
+- **Construct from Scratch**:
+
+  ```python
+  from scipy.sparse import random
+
+  # Define the problem components as numpy arrays or sparse matrices
+  objective_matrix = random(100, 100, density=0.05).toarray()
+  objective_vector = np.random.randn(100)
+  constraint_matrix = random(50, 100, density=0.1).toarray()
+  constraint_lower_bound = np.random.randn(50)
   
-```sh
-folder_path = "./example/" 
+  solver.setConstructedProblem(
+      objective_matrix=objective_matrix,
+      objective_vector=objective_vector,
+      objective_constant=0.0,
+      constraint_matrix=constraint_matrix,
+      constraint_lower_bound=constraint_lower_bound,
+      num_equalities=10,
+      variable_lower_bound=np.zeros(100),
+      variable_upper_bound=np.ones(100) * 10,
+      isfinite_variable_lower_bound=np.full(100, True),
+      isfinite_variable_upper_bound=np.full(100, True)
+  )
+  ```
+
+  Notice that all matrix will be strictly converted to sparse csc matrix.
+
+### 4. Solving the Problem
+
+```python
+solver.solve()
 ```
 
-### Data Requirement
+### 5. Accessing Results
 
-Input data shouldn't have any constraint with inf upper-bound and -inf lower-bound.
+After solving, retrieve various results as properties:
 
-## Datasets
+- **`solver.primal_solution`**: Returns the primal solution after solving.
+- **`solver.dual_solution`**: Returns the dual solution after solving.
+- **`solver.objective_value`**: Returns the objective function's value.
+- **`solver.iteration_count`**: Returns a dictionary with outer and inner iteration counts.
+- **`solver.solve_time_sec`**: Solving time in seconds.
+- **`solver.kkt_error`**: The KKT error for per iterations.
+- **`solver.status`**: Termination status string.
 
-All datasets we used can be found at [https://anonymous.4open.science/r/QP_datasets/]
+## Example
 
-## Interpreting the output
+Below is a complete example:
 
-A table of iteration stats will be printed with the following headings.
+```python
+solver = PDHCG(name="Example QP Solver")
 
-### runtime
+# Set parameters
+solver.setParams(gpu_flag=False, verbose_level=1)
 
-- `#iter`: the current iteration number.
-- `#kkt`: the cumulative number of times the KKT matrix is multiplied.
-- `seconds`: the cumulative solve time in seconds.
+# Define a custom problem
+objective_matrix = np.eye(10)
+objective_vector = np.ones(10)
+constraint_matrix = np.random.randn(5, 10)
+constraint_lower_bound = np.zeros(5)
 
-### residuals
+solver.setConstructedProblem(
+    objective_matrix=objective_matrix,
+    objective_vector=objective_vector,
+    objective_constant=0.0,
+    constraint_matrix=constraint_matrix,
+    constraint_lower_bound=constraint_lower_bound,
+    num_equalities=2,
+    variable_lower_bound=np.zeros(10),
+    variable_upper_bound=np.ones(10) * 5,
+    isfinite_variable_lower_bound=np.full(10, True),
+    isfinite_variable_upper_bound=np.full(10, True)
+)
 
-- `pr norm`: the Euclidean norm of primal residuals (i.e., the constraint violation).
-- `du norm`: the Euclidean norm of the dual residuals.
-- `gap`: the gap between the primal and dual objective.
+# Solve the problem
+solver.solve()
 
-### solution information
-
-- `pr obj`: the primal objective value.
-- `pr norm`: the Euclidean norm of the primal variable vector.
-- `du norm`: the Euclidean norm of the dual variable vector.
-
-### relative residuals
-
-- `rel pr`: the Euclidean norm of the primal residuals, relative to the right-hand side.
-- `rel dul`: the Euclidean norm of the dual residuals, relative to the primal linear objective.
-- `rel gap`: the relative optimality gap.
-  
-### At the end of the run, the following summary information will be printed
-
-- Total Iterations: The total number of Primal-Dual iterations.
-
-- CG  iteration: The total number of Conjugate Gradient iterations.
-
-- Solving Status: Indicating if it found an optimal solution.
-
-### Others
-
-- `json2csv.jl` is a utility to summarize all output files.
-
-## License
-
-```.
-MIT License
-
-Copyright (c) 2024
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Output results
+print("Objective Value:", solver.objective_value)
+print("Primal Solution:", solver.primal_solution)
+print("Dual Solution:", solver.dual_solution)
 ```
+
+## Parameters
+
+For more details of `Rescale` and `Restart` Parameters, please refer to [Restarted Primal-Dual Hybrid Conjugate Gradient Method for Large-Scale Quadratic Programming](https://arxiv.org/abs/2405.16160).
+
+| Category   | Parameter                       | Default Value | Description                                                                                  |
+|------------|---------------------------------|---------------|----------------------------------------------------------------------------------------------|
+| **Basic**  | `gpu_flag`                      | `False`       | Whether to use the GPU for computations.                                                    |
+|            | `warm_up_flag`                  | `False`       | If `True`, excludes compilation time from runtime measurements.                             |
+|            | `verbose_level`                 | `2`           | Verbosity level (0-9). Higher values produce more detailed output.                          |
+|            | `time_limit`                    | `3600.0`      | Maximum time limit for solving in seconds.                                                  |
+|            | `relat_error_tolerance`         | `1e-6`        | Relative error tolerance for solution accuracy.                                             |
+|            | `iteration_limit`               | `2**31 - 1`   | Maximum number of iterations allowed.                                                       |
+| **Rescale**| `ruiz_rescaling_iters`          | `10`          | Number of iterations for Ruiz rescaling.                                                    |
+|            | `l2_norm_rescaling_flag`        | `False`       | Enables L2 norm rescaling if `True`.                                                        |
+|            | `pock_chambolle_alpha`          | `1.0`         | Alpha parameter for the Pock-Chambolle algorithm.                                           |
+| **Restart**| `artificial_restart_threshold`  | `0.2`         | Threshold for artificial restart criteria.                                                  |
+|            | `sufficient_reduction`          | `0.2`         | Minimum reduction required to consider a restart as sufficient.                             |
+|            | `necessary_reduction`           | `0.8`         | Reduction required for restart necessity.                                                  |
+|            | `primal_weight_update_smoothing`| `0.2`         | Smoothing parameter for primal-dual weight updates.                                         |
+| **Log**    | `save_flag`                     | `False`       | If `True`, saves the solver's results to a file.                                           |
+|            | `saved_name`                    | `None`        | Filename for saving the result (if `save_flag` is `True`).                                  |
+|            | `output_dir`                    | `None`        | Directory path for saving results.                                                          |

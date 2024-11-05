@@ -1,0 +1,13 @@
+LICENSE
+README.md
+setup.py
+pdhcg/__init__.py
+pdhcg/params.py
+pdhcg/probs.py
+pdhcg/solver.py
+pdhcg.egg-info/PKG-INFO
+pdhcg.egg-info/SOURCES.txt
+pdhcg.egg-info/dependency_links.txt
+pdhcg.egg-info/entry_points.txt
+pdhcg.egg-info/requires.txt
+pdhcg.egg-info/top_level.txt
