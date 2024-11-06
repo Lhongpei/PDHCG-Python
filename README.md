@@ -94,6 +94,65 @@ After solving, retrieve various results as properties:
 - **`solver.kkt_error`**: The KKT error for per iterations.
 - **`solver.status`**: Termination status string.
 
+## Interpreting the output
+
+A table of iteration stats will be printed with the following headings.
+
+### runtime
+
+- `#iter`: the current iteration number.
+- `#kkt`: the cumulative number of times the KKT matrix is multiplied.
+- `seconds`: the cumulative solve time in seconds.
+
+### residuals
+
+- `pr norm`: the Euclidean norm of primal residuals (i.e., the constraint violation).
+- `du norm`: the Euclidean norm of the dual residuals.
+- `gap`: the gap between the primal and dual objective.
+
+### solution information
+
+- `pr obj`: the primal objective value.
+- `pr norm`: the Euclidean norm of the primal variable vector.
+- `du norm`: the Euclidean norm of the dual variable vector.
+
+### relative residuals
+
+- `rel pr`: the Euclidean norm of the primal residuals, relative to the right-hand side.
+- `rel dul`: the Euclidean norm of the dual residuals, relative to the primal linear objective.
+- `rel gap`: the relative optimality gap.
+  
+### At the end of the run, the following summary information will be printed
+
+- Total Iterations: The total number of Primal-Dual iterations.
+
+- CG  iteration: The total number of Conjugate Gradient iterations.
+
+- Solving Status: Indicating if it found an optimal solution.
+
+## Parameters
+
+For more details of `Rescale` and `Restart` Parameters, please refer to [Restarted Primal-Dual Hybrid Conjugate Gradient Method for Large-Scale Quadratic Programming](https://arxiv.org/abs/2405.16160).
+
+| Category   | Parameter                       | Default Value | Description                                                                                  |
+|------------|---------------------------------|---------------|----------------------------------------------------------------------------------------------|
+| **Basic**  | `gpu_flag`                      | `False`       | Whether to use the GPU for computations.                                                    |
+|            | `warm_up_flag`                  | `False`       | If `True`, excludes compilation time from runtime measurements.                             |
+|            | `verbose_level`                 | `2`           | Verbosity level (0-9). Higher values produce more detailed output.                          |
+|            | `time_limit`                    | `3600.0`      | Maximum time limit for solving in seconds.                                                  |
+|            | `relat_error_tolerance`         | `1e-6`        | Relative error tolerance for solution accuracy.                                             |
+|            | `iteration_limit`               | `2**31 - 1`   | Maximum number of iterations allowed.                                                       |
+| **Rescale**| `ruiz_rescaling_iters`          | `10`          | Number of iterations for Ruiz rescaling.                                                    |
+|            | `l2_norm_rescaling_flag`        | `False`       | Enables L2 norm rescaling if `True`.                                                        |
+|            | `pock_chambolle_alpha`          | `1.0`         | Alpha parameter for the Pock-Chambolle algorithm.                                           |
+| **Restart**| `artificial_restart_threshold`  | `0.2`         | Threshold for artificial restart criteria.                                                  |
+|            | `sufficient_reduction`          | `0.2`         | Minimum reduction required to consider a restart as sufficient.                             |
+|            | `necessary_reduction`           | `0.8`         | Reduction required for restart necessity.                                                  |
+|            | `primal_weight_update_smoothing`| `0.2`         | Smoothing parameter for primal-dual weight updates.                                         |
+| **Log**    | `save_flag`                     | `False`       | If `True`, saves the solver's results to a file.                                           |
+|            | `saved_name`                    | `None`        | Filename for saving the result (if `save_flag` is `True`).                                  |
+|            | `output_dir`                    | `None`        | Directory path for saving results.                                                          |
+
 ## Example
 
 Below is a complete example:
@@ -131,26 +190,3 @@ print("Objective Value:", solver.objective_value)
 print("Primal Solution:", solver.primal_solution)
 print("Dual Solution:", solver.dual_solution)
 ```
-
-## Parameters
-
-For more details of `Rescale` and `Restart` Parameters, please refer to [Restarted Primal-Dual Hybrid Conjugate Gradient Method for Large-Scale Quadratic Programming](https://arxiv.org/abs/2405.16160).
-
-| Category   | Parameter                       | Default Value | Description                                                                                  |
-|------------|---------------------------------|---------------|----------------------------------------------------------------------------------------------|
-| **Basic**  | `gpu_flag`                      | `False`       | Whether to use the GPU for computations.                                                    |
-|            | `warm_up_flag`                  | `False`       | If `True`, excludes compilation time from runtime measurements.                             |
-|            | `verbose_level`                 | `2`           | Verbosity level (0-9). Higher values produce more detailed output.                          |
-|            | `time_limit`                    | `3600.0`      | Maximum time limit for solving in seconds.                                                  |
-|            | `relat_error_tolerance`         | `1e-6`        | Relative error tolerance for solution accuracy.                                             |
-|            | `iteration_limit`               | `2**31 - 1`   | Maximum number of iterations allowed.                                                       |
-| **Rescale**| `ruiz_rescaling_iters`          | `10`          | Number of iterations for Ruiz rescaling.                                                    |
-|            | `l2_norm_rescaling_flag`        | `False`       | Enables L2 norm rescaling if `True`.                                                        |
-|            | `pock_chambolle_alpha`          | `1.0`         | Alpha parameter for the Pock-Chambolle algorithm.                                           |
-| **Restart**| `artificial_restart_threshold`  | `0.2`         | Threshold for artificial restart criteria.                                                  |
-|            | `sufficient_reduction`          | `0.2`         | Minimum reduction required to consider a restart as sufficient.                             |
-|            | `necessary_reduction`           | `0.8`         | Reduction required for restart necessity.                                                  |
-|            | `primal_weight_update_smoothing`| `0.2`         | Smoothing parameter for primal-dual weight updates.                                         |
-| **Log**    | `save_flag`                     | `False`       | If `True`, saves the solver's results to a file.                                           |
-|            | `saved_name`                    | `None`        | Filename for saving the result (if `save_flag` is `True`).                                  |
-|            | `output_dir`                    | `None`        | Directory path for saving results.                                                          |
