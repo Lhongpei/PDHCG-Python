@@ -1,8 +1,8 @@
 
 # PDHCG-Python
+The `PDHCG-Python` project provides a Python interface for PDHCG algorithm suggested in [Restarted Primal-Dual Hybrid Conjugate Gradient Method for Large-Scale Quadratic Programming](https://arxiv.org/abs/2405.16160), which is an advanced FOM solver designed for QPs. Core functions is implemented by Julia, see [PDHCG.jl](https://github.com/Huangyc98/PDHCG.jl).
 
-The `PDHCG-Python` project provides a Python interface for solving convex Quadratic Programming problems with linear constraints  (QPs)  using the Primal-Dual Hybrid Conjugate Gradient (PDHCG) algorithm, which is an advanced FOM solver designed for QPs. Core functions is implemented by Julia.
-
+For datasets mentioned in the paper, please refer to [Datasets](https://github.com/Lhongpei/QP_datasets)
 ## Installation
 
 Install through PyPI
