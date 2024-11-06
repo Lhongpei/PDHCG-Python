@@ -10,6 +10,7 @@ Install through PyPI
 ```bash
 pip install pdhcg
 ```
+If you cannot install through PyPI, please clone this repo to use PDHCG.
 
 ## Usage
 
