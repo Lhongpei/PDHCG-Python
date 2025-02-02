@@ -1,12 +1,13 @@
-from juliacall import Main as jl
+# from juliacall import Main as jl
 import juliacall
+from . import jl
 from typing import Optional
 import numpy as np
 from pdhcg.params import Params
 from pdhcg.probs import QuadraticProgrammingProblem, PyProblemFromJulia
 from scipy.sparse import coo_matrix
-jl.seval('push!(LOAD_PATH, "pdhcg/julia_core/.")')
-jl.seval('using PDHCG')
+# jl.seval('push!(LOAD_PATH, "pdhcg/julia_core/.")')
+# jl.seval('using PDHCG')
 
 class PDHCG:
     def __init__(

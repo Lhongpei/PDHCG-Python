@@ -1,9 +1,10 @@
 from scipy.sparse import coo_matrix
-from juliacall import Main as jl
+# from juliacall import Main as jl
+from . import jl
 import time
 import numpy as np
-jl.seval('push!(LOAD_PATH, "pdhcg/julia_core/.")')
-jl.seval('using PDHCG') 
+# jl.seval('push!(LOAD_PATH, "pdhcg/julia_core/.")')
+# jl.seval('using PDHCG') 
 jl.seval('using SparseArrays')
 class QuadraticProgrammingProblem:
     def __init__(

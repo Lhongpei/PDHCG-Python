@@ -158,6 +158,9 @@ For more details of `Rescale` and `Restart` Parameters, please refer to [Restart
 Below is a complete example:
 
 ```python
+import numpy as np
+from pdhcg import PDHCG
+
 solver = PDHCG(name="Example QP Solver")
 
 # Set parameters

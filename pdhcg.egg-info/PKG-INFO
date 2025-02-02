@@ -1,9 +1,0 @@
-Metadata-Version: 2.1
-Name: pdhcg
-Version: 0.1
-Summary: A python wrapper for PDHCG.jl
-Author: hongpeili
-Author-email: ishongpeili@gmail.com
-License: MIT
-Keywords: Optimizer
-License-File: LICENSE
