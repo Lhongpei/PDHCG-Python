@@ -1,0 +1,11 @@
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+GZip = "92fee26a-97fe-5a0c-ad85-20a5f3185b63"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Parsers = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+QPSReader = "10f199a5-22af-520b-b891-7ce84a7b1bd0"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
+
+[compat]
+LinearAlgebra = "1.11.0"

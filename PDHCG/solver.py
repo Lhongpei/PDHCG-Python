@@ -3,8 +3,8 @@ import juliacall
 from . import jl
 from typing import Optional
 import numpy as np
-from pdhcg.params import Params
-from pdhcg.probs import QuadraticProgrammingProblem, PyProblemFromJulia
+from PDHCG.params import Params
+from PDHCG.probs import QuadraticProgrammingProblem, PyProblemFromJulia
 from scipy.sparse import coo_matrix
 # jl.seval('push!(LOAD_PATH, "pdhcg/julia_core/.")')
 # jl.seval('using PDHCG')

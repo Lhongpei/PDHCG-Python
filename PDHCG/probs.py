@@ -5,7 +5,7 @@ import time
 import numpy as np
 # jl.seval('push!(LOAD_PATH, "pdhcg/julia_core/.")')
 # jl.seval('using PDHCG') 
-jl.seval('using SparseArrays')
+# jl.seval('using SparseArrays')
 class QuadraticProgrammingProblem:
     def __init__(
                 self, 

@@ -1,5 +1,5 @@
 import numpy as np
-from pdhcg import PDHCG
+from PDHCG import PDHCG
 
 solver = PDHCG(name="Example QP Solver")
 

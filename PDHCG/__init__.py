@@ -11,19 +11,12 @@ logger = logging.getLogger(__name__)
 def init_julia():
     """安全初始化 Julia 环境"""
     try:
-        # 1. 设置 Julia 路径（如果默认路径无效）
-        # os.environ["JULIA_BINDIR"] = "/path/to/julia/bin"
-
-        # 2. 添加 Julia 模块路径（动态生成绝对路径）
-        julia_core_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "julia_core")
-        )
-        jl.seval(f'push!(LOAD_PATH, "{julia_core_path}")')
-        logger.info(f"Added Julia path: {julia_core_path}")
-
-        # 3. 加载 Julia 模块
+        jl.seval(f'using Pkg')
+        #print all LOAD_PATH
+        jl.seval(f'Pkg.activate("PDHCG")')
+        jl.seval(f'push!(LOAD_PATH, "PDHCG/src")')
         jl.seval('using PDHCG')
-        # jl.seval('using SparseArrays')
+        jl.seval('using SparseArrays')
         logger.info("Julia module PDHCG loaded successfully.")
         
         # jl.seval('using SparseArrays')
