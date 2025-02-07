@@ -9,19 +9,29 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def init_julia():
-    """安全初始化 Julia 环境"""
+    """Safely initialize the Julia environment, calling Pkg.develop only when necessary."""
     try:
-        jl.seval(f'using Pkg')
-        #print all LOAD_PATH
-        jl.seval(f'Pkg.activate("PDHCG")')
-        jl.seval(f'push!(LOAD_PATH, "PDHCG/src")')
-        jl.seval('using PDHCG')
-        jl.seval('using SparseArrays')
-        logger.info("Julia module PDHCG loaded successfully.")
+        # Import the Pkg module and activate the target environment.
+        jl.seval('using Pkg')
+        if not os.path.exists("pdhcg_core"):
+            os.mkdir("pdhcg_core")
+        jl.seval('Pkg.activate("pdhcg_core")')
         
-        # jl.seval('using SparseArrays')
-        # logger.info("Julia module SparseArrays loaded successfully.")
-
+        try:
+            # Attempt to load the PDHCG package.
+            # If it is already developed, this should succeed.
+            jl.seval('using PDHCG')
+        except Exception as load_err:
+            # If loading fails, it means PDHCG is not registered in the current environment.
+            logger.info("PDHCG not found in the current environment. Calling Pkg.develop to register the local package...")
+            jl.seval('Pkg.develop(path="PDHCG")')
+            # Reload the PDHCG package after developing it.
+            jl.seval('using PDHCG')
+        
+        # Load additional packages if necessary.
+        jl.seval('using SparseArrays')
+        logger.info("Julia package PDHCG loaded successfully.")
+        
     except Exception as e:
         logger.error(f"Julia initialization failed: {e}")
         raise RuntimeError("Julia environment initialization failed.") from e
