@@ -64,7 +64,7 @@ class PDHCG:
                                       qp.isfinite_variable_lower_bound, qp.isfinite_variable_upper_bound)
         
     def read(self, filename, fixformat = False):
-        self.__qp = jl.PDHCG.readFile(filename, fixformat = fixformat)
+        self.__qp = jl.PDHCG.readFile(filename, fix_format = fixformat)
         
     def setGeneratedProblem(self, problem_type, n, density, seed):
         self.__qp = jl.PDHCG.generateProblem(problem_type, n = n, density = density, seed = seed)
