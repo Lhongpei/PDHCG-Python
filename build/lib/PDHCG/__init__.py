@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 from juliacall import Main as jl  # 直接导入 jl
-from .check_julia import logoInit
+
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,10 +36,7 @@ def init_julia():
         logger.error(f"Julia initialization failed: {e}")
         raise RuntimeError("Julia environment initialization failed.") from e
 
-if os.environ.get("PDHCG_INIT") != "1":
-    logoInit()
-    os.environ["PDHCG_INIT"] = "1"
-
+# 可选：自动初始化（根据需求开启）
 init_julia()
 
 # 导入 Python 模块（确保在 Julia 初始化后）
@@ -60,15 +57,3 @@ __all__ = [
     "jl",  # 全局 Julia 接口
     "init_julia",  # 初始化函数
 ]
-
-
-
-logo = r"""
-    ██████╗ ██████╗ ██╗  ██╗ ██████╗ ██████╗ 
-    ██╔══██╗██╔══██╗██║  ██║██╔════╝██╔════╝ 
-    ██████╔╝██║  ██║███████║██║     ██║  ███╗
-    ██╔═══╝ ██║  ██║██╔══██║██║     ██║   ██║
-    ██║     ██████╔╝██║  ██║╚██████╗╚██████╔╝
-    ╚═╝     ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ 
-        An optimizer for Large Convex Quadratic Programming            
-    """
