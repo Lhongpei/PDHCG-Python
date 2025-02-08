@@ -7,6 +7,8 @@ Core functions is implemented by Julia, see [PDHCG.jl](https://github.com/Huangy
 For datasets mentioned in the paper, please refer to [Datasets](https://github.com/Lhongpei/QP_datasets)
 ## Installation
 
+**Prerequsite:** Install [Julia](https://julialang.org/downloads/).
+
 Install through PyPI
 
 ```bash
