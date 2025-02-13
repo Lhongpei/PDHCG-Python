@@ -1,7 +1,7 @@
 
 # PDHCG-Python
 The `PDHCG-Python` project provides a Python interface for PDHCG algorithm suggested in [Restarted Primal-Dual Hybrid Conjugate Gradient Method for Large-Scale Quadratic Programming](https://arxiv.org/abs/2405.16160).
-y
+
 Core functions is implemented by Julia, see [PDHCG.jl](https://github.com/Huangyc98/PDHCG.jl).
 
 For datasets mentioned in the paper, please refer to [Datasets](https://github.com/Lhongpei/QP_datasets)
